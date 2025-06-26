@@ -91,7 +91,7 @@ spring:
     url: jdbc:mysql://192.168.50.131:3306/xiaomi_battery?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
   data:
     redis:
-      host: localhost
+      host: 192.168.50.131
 rocketmq:
   name-server: 192.168.50.131:9876
 
