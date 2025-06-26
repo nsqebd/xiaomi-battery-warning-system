@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaomi.signal.mapper.SignalMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.xiaomi.signal.entity.Signal">
+        <id column="id" property="id"/>
+        <result column="vid" property="vid"/>
+        <result column="chassis_number" property="chassisNumber"/>
+        <result column="signal_data" property="signalData"/>
+        <result column="mx" property="mx"/>
+        <result column="mi" property="mi"/>
+        <result column="ix" property="ix"/>
+        <result column="ii" property="ii"/>
+        <result column="report_time" property="reportTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="is_processed" property="isProcessed"/>
+    </resultMap>
+
+
+    <!-- 基础列名 -->
+    <sql id="Base_Column_List">
+        id, vid, chassis_number, signal_data, mx, mi, ix, ii,
+        report_time, create_time, is_processed
+    </sql>
+
+    <!-- 根据VID查询信号列表 -->
+    <select id="selectByVid" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM signal
+        WHERE vid = #{vid}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 获取VID的最新信号 -->
+    <select id="selectLatestByVid" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM signal
+        WHERE vid = #{vid}
+        ORDER BY create_time DESC
+        LIMIT 1
+    </select>
+
+    <!-- 分页查询信号列表 -->
+    <select id="selectSignalPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM signal
+        WHERE 1=1
+        <if test="vid != null and vid != ''">
+            AND vid = #{vid}
+        </if>
+        <if test="isProcessed != null">
+            AND is_processed = #{isProcessed}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 查询未处理的信号列表（用于定时任务） -->
+    <select id="selectUnprocessedSignals" parameterType="int" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM signal
+        WHERE is_processed = 0
+        ORDER BY create_time ASC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 批量更新信号处理状态 -->
+    <update id="updateProcessedStatus">
+        UPDATE signal
+        SET is_processed = #{isProcessed}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaomi.rule.mapper.RuleMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.xiaomi.rule.entity.Rule">
+        <id column="id" property="id"/>
+        <result column="sequence_no" property="sequenceNo"/>
+        <result column="rule_code" property="ruleCode"/>
+        <result column="rule_name" property="ruleName"/>
+        <result column="battery_type" property="batteryType"/>
+        <result column="warning_rule" property="warningRule"/>
+        <result column="rule_expression" property="ruleExpression"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+
+    <!-- 基础列名 -->
+    <sql id="Base_Column_List">
+        id, sequence_no, rule_code, rule_name, battery_type, warning_rule,
+        rule_expression, status, create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 根据规则编号和电池类型查询规则 -->
+    <select id="selectByRuleCodeAndBatteryType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM rule
+        WHERE rule_code = #{ruleCode}
+        AND battery_type = #{batteryType}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 根据电池类型查询启用的规则列表 -->
+    <select id="selectEnabledRulesByBatteryType" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM rule
+        WHERE battery_type = #{batteryType}
+        AND status = 1
+        AND is_deleted = 0
+        ORDER BY sequence_no ASC
+    </select>
+
+    <!-- 分页查询规则列表 -->
+    <select id="selectRulePage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM rule
+        WHERE is_deleted = 0
+        <if test="batteryType != null and batteryType != ''">
+            AND battery_type = #{batteryType}
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY sequence_no ASC
+    </select>
+
+    <!-- 根据序号查询规则 -->
+    <select id="selectBySequenceNo" parameterType="int" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM rule
+        WHERE sequence_no = #{sequenceNo}
+        AND is_deleted = 0
+    </select>
+
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaomi.warning.mapper.WarningMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.xiaomi.warning.entity.Warning">
+        <id column="id" property="id"/>
+        <result column="vid" property="vid"/>
+        <result column="chassis_number" property="chassisNumber"/>
+        <result column="battery_type" property="batteryType"/>
+        <result column="rule_code" property="ruleCode"/>
+        <result column="rule_name" property="ruleName"/>
+        <result column="warning_level" property="warningLevel"/>
+        <result column="signal_data" property="signalData"/>
+        <result column="warning_message" property="warningMessage"/>
+        <result column="warning_time" property="warningTime"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 基础列名 -->
+    <sql id="Base_Column_List">
+        id, vid, chassis_number, battery_type, rule_code, rule_name,
+        warning_level, signal_data, warning_message, warning_time,
+        status, create_time, update_time
+    </sql>
+
+    <!-- 根据VID查询预警列表 -->
+    <select id="selectByVid" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM warning
+        WHERE vid = #{vid}
+        ORDER BY warning_time DESC
+    </select>
+
+    <!-- 分页查询预警列表 -->
+    <select id="selectWarningPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM warning
+        WHERE 1=1
+        <if test="vid != null and vid != ''">
+            AND vid = #{vid}
+        </if>
+        <if test="warningLevel != null">
+            AND warning_level = #{warningLevel}
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        <if test="startTime != null">
+            AND warning_time >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND warning_time &lt;= #{endTime}
+        </if>
+        ORDER BY warning_time DESC
+    </select>
+
+    <!-- 查询预警统计信息 -->
+    <select id="selectWarningStats" resultType="map">
+        SELECT
+        COUNT(*) as total_count,
+        SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as processed_count,
+        SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as unprocessed_count
+        FROM warning
+        WHERE 1=1
+        <if test="startTime != null">
+            AND warning_time >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND warning_time &lt;= #{endTime}
+        </if>
+    </select>
+
+    <!-- 根据预警等级统计数量 -->
+    <select id="selectWarningCountByLevel" resultType="map">
+        SELECT
+        warning_level,
+        COUNT(*) as count,
+        CASE warning_level
+        WHEN 0 THEN '严重'
+        WHEN 1 THEN '高'
+        WHEN 2 THEN '中'
+        WHEN 3 THEN '低'
+        WHEN 4 THEN '信息'
+        ELSE '未知'
+        END as level_name
+        FROM warning
+        WHERE 1=1
+        <if test="startTime != null">
+            AND warning_time >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND warning_time &lt;= #{endTime}
+        </if>
+        GROUP BY warning_level
+        ORDER BY warning_level ASC
+    </select>
+
+    <!-- 根据车辆统计预警数量 -->
+    <select id="selectWarningCountByVehicle" resultType="map">
+        SELECT
+        vid,
+        chassis_number,
+        battery_type,
+        COUNT(*) as warning_count,
+        SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as processed_count,
+        SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as unprocessed_count,
+        MIN(warning_level) as min_warning_level,
+        MAX(warning_time) as latest_warning_time
+        FROM warning
+        WHERE 1=1
+        <if test="startTime != null">
+            AND warning_time >= #{startTime}
+        </if>
+        <if test="endTime != null">
+            AND warning_time &lt;= #{endTime}
+        </if>
+        GROUP BY vid, chassis_number, battery_type
+        ORDER BY warning_count DESC, latest_warning_time DESC
+        LIMIT 20
+    </select>
+
+</mapper>

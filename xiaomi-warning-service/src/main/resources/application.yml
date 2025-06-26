@@ -1,0 +1,112 @@
+server:
+  port: 8084
+  servlet:
+    context-path: /warning
+
+spring:
+  application:
+    name: xiaomi-warning-service
+  profiles:
+    active: dev
+
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.50.131:3306/xiaomi_battery?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: MySQL-123
+
+  # Redis配置
+  data:
+    redis:
+      host: 192.168.50.131
+      port: 6379
+      password:
+      database: 0
+      timeout: 10s
+      lettuce:
+        pool:
+          max-active: 200
+          max-wait: -1ms
+          max-idle: 10
+          min-idle: 0
+
+  # Elasticsearch配置
+  elasticsearch:
+    uris: http://192.168.50.131:9200
+    connection-timeout: 5s
+    socket-timeout: 30s
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.xiaomi.warning.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    call-setters-on-nulls: true
+  global-config:
+    db-config:
+      id-type: auto
+
+# Dubbo配置
+dubbo:
+  application:
+    name: xiaomi-warning-service
+  registry:
+    address: zookeeper://localhost:2181
+  protocol:
+    name: dubbo
+    port: 20884
+  scan:
+    base-packages: com.xiaomi.warning.provider
+  consumer:
+    check: false
+
+# RocketMQ配置
+rocketmq:
+  name-server: 192.168.50.131:9876
+  producer:
+    group: warning-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 2
+  consumer:
+    group: signal-consumer-group
+
+# 日志配置
+logging:
+  level:
+    com.xiaomi.warning.mapper: debug
+    org.apache.rocketmq: info
+  pattern:
+    console: '%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:mysql://192.168.50.131:3306/xiaomi_battery?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+  data:
+    redis:
+      host: 192.168.50.131
+  elasticsearch:
+    uris: http://192.168.50.131:9200
+rocketmq:
+  name-server: 192.168.50.131:9876
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://prod-mysql:3306/xiaomi_battery?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+  data:
+    redis:
+      host: prod-redis
+  elasticsearch:
+    uris: http://prod-elasticsearch:9200
+rocketmq:
+  name-server: prod-rocketmq:9876

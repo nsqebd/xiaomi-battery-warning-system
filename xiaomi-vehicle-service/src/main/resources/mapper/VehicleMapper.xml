@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaomi.vehicle.mapper.VehicleMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.xiaomi.vehicle.entity.Vehicle">
+        <id column="id" property="id"/>
+        <result column="vid" property="vid"/>
+        <result column="chassis_number" property="chassisNumber"/>
+        <result column="battery_type" property="batteryType"/>
+        <result column="total_mileage" property="totalMileage"/>
+        <result column="battery_health" property="batteryHealth"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+
+    <!-- 基础列名 -->
+    <sql id="Base_Column_List">
+        id, vid, chassis_number, battery_type, total_mileage, battery_health,
+        create_time, update_time, is_deleted
+    </sql>
+
+    <!-- 根据VID查询车辆 -->
+    <select id="selectByVid" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM vehicle
+        WHERE vid = #{vid}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 根据车架编号查询车辆 -->
+    <select id="selectByChassisNumber" parameterType="string" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM vehicle
+        WHERE chassis_number = #{chassisNumber}
+        AND is_deleted = 0
+    </select>
+
+    <!-- 分页查询车辆列表 -->
+    <select id="selectVehiclePage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM vehicle
+        WHERE is_deleted = 0
+        <if test="batteryType != null and batteryType != ''">
+            AND battery_type = #{batteryType}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>
